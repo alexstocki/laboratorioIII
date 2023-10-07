@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="./index.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Alex Stocki - Primer Parcial Laboratorio III</title>
+</head>
+<body>
+    
+    <div id="listado-vehiculos" class="container-sm mt-5 mb-5 pt-4 pb-4 border border-primary-subtle rounded-3">
+        <h1>Vehiculos</h1>
+        <form>
+            <label for="filtroSelect">Filtrar por:</label>
+            <select class="form-select" id="filtro-select" aria-label="">
+                <option selected value="Todos">Todos</option>
+                <option value="Aereos">Aereos</option>
+                <option value="Terrestres">Terrestres</option>
+            </select>
+
+            <div class="box-checkboxes">
+                <label for="filtro-checkboxes">Selecciona al menos una opción:</label>
+                <div id="filtro-checkboxes" class="check-section"></div>
+            </div>
+            <div class="box-calcular">
+                <label for="input-read-only-promedio">Promedio Velocidad Maxima:</label>
+                <input type="text" id="input-read-only-promedio" readonly>
+    
+                <button type="button" onclick="GetPromedio(document.getElementById('filtro-select').value)">calcular</button>         
+            </div>
+        </form>
+
+        <table id="tabla-vehiculos" class="table">
+            <thead>
+              <tr id="table-header"> </tr>
+            </thead>
+            <tbody id="tabla-vehiculos-body"></tbody>
+        </table>
+
+        <button id="show-abm" onclick="ShowAbm()">Agregar</button>
+    </div>
+
+    <div 
+        id="form-abm" 
+        class="form-abm container-sm container mt-5 mb-5 pt-4 pb-4 border border-primary-subtle rounded-3"
+        style="display: none;"
+        >
+        <h2>Formulario ABM</h2>
+        <div class="d-flex flex-column">
+            <label for="id-vehiculo">ID:</label>
+            <input id="id-vehiculo" type="text" readonly>
+
+            <label for="modelo-vehiculo">Modelo</label>
+            <input id="modelo-vehiculo" type="text">
+
+            <label for="anoFab-vehiculo">Año Fabricacion</label>
+            <input id="anoFab-vehiculo" type="text">
+
+            <label for="velMax-vehiculo">Velocidad Maxima</label>
+            <input id="velMax-vehiculo" type="text">
+
+            <label for="abm-filtro-select">Tipo de Vehiculo:</label>
+            <select class="abm-select mt-3" id="abm-filtro-select" aria-label="">
+                <option selected value="">Seleccionar</option>
+                <option value="Aereo">Aereo</option>
+                <option value="Terrestre">Terrestre</option>
+            </select>
+            <div id="abm-hidden-inputs" class="d-flex flex-column mt-3"></div>
+
+
+
+            <div class="d-flex flex-row mt-3 grid gap-5">
+                <button 
+                    id="form-abm-add"
+                    onclick="AgregarVehiculo()"
+                >
+                    Aceptar
+                </button>
+                <button 
+                    id="form-abm-cancel"
+                    onclick="ShowAbm()"
+                >
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script> 
+        const vehiculosInit = ListarVehiculos();
+        const tableHead = document.getElementById('table-header');
+        const tableBody = document.querySelector('tbody');
+        
+        const selectorVehiculos = document.getElementById('filtro-select');
+        const checkSection = document.getElementById('filtro-checkboxes');
+
+        fields.forEach(field => {
+            const th = document.createElement('th');
+            th.textContent = field.name;
+            th.style.display = 'table-cell';
+            tableHead.appendChild(th);
+        });
+        
+        MostrarCheckboxes();
+        CompletarTablaVehiculos(vehiculosInit);
+        
+
+        selectorVehiculos.addEventListener('change', function() {
+            tableBody.innerHTML = '';
+
+            const vehiculos = FiltrarVehiculos(selectorVehiculos.value);
+            CompletarTablaVehiculos(vehiculos);
+        });
+
+        const checkboxes = document.querySelectorAll('.form-check-input');
+        const columnas = document.querySelectorAll('th, td');
+
+
+        const checkboxesMarcados = [];
+        const checks = document.querySelectorAll('.form-check-input');
+        checks.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const valor = {value: checkbox.value, id: checkbox.id};
+
+                if (checkbox.checked) {
+                    columnas.forEach(columna => {
+                        if (columna.textContent === valor.value) {
+                            columna.style.display = 'table-cell';
+
+                            const index = checkboxesMarcados.findIndex(check => check.id === valor.id);
+                            if (index !== -1) {
+                                checkboxesMarcados.splice(index, 1);
+                            }
+                        }
+                    });
+                } 
+                else {
+                    columnas.forEach(columna => {
+                        if (columna.textContent === valor.value) {
+                            columna.style.display = 'none';
+                            checkboxesMarcados.push(valor);
+                        }
+                    });
+                }
+
+                tableBody.innerHTML = '';
+                CompletarTablaVehiculos(FiltrarVehiculos(selectorVehiculos.value), checkboxesMarcados);
+            });
+        });
+
+        const selectorAbm = document.getElementById('abm-filtro-select');
+        selectorAbm.addEventListener('change', function() {
+
+            if (selectorAbm.value === 'Aereo') {
+                const labelAltura = document.createElement('label');
+                const labelAutonomia = document.createElement('label');
+
+                labelAltura.setAttribute('for', 'altMax-vehiculo');
+                labelAltura.textContent = 'Alcance';
+
+                labelAutonomia.setAttribute('for', 'autonomia-vehiculo');
+                labelAutonomia.textContent = 'Helices';
+
+                const inputAltura = document.createElement('input');
+                inputAltura.setAttribute('id', 'altMax-vehiculo');
+                inputAltura.setAttribute('type', 'text');
+
+                const inputAutonomia = document.createElement('input');
+                inputAutonomia.setAttribute('id', 'autonomia-vehiculo');
+                inputAutonomia.setAttribute('type', 'text');
+
+                const formAbm = document.getElementById('abm-hidden-inputs');
+                formAbm.innerHTML = '';
+
+                formAbm.appendChild(labelAltura);
+                formAbm.appendChild(inputAltura);
+                formAbm.appendChild(labelAutonomia);
+                formAbm.appendChild(inputAutonomia);
+            }
+            else {
+                const labelRuedas = document.createElement('label');
+                const labelPuertas = document.createElement('label');
+
+                labelRuedas.setAttribute('for', 'cantRue-vehiculo');
+                labelRuedas.textContent = 'Cantidad Ruedas';
+
+                labelPuertas.setAttribute('for', 'cantPue-vehiculo');
+                labelPuertas.textContent = 'Cantidad Puertas';
+
+                const inputRuedas = document.createElement('input');
+                inputRuedas.setAttribute('id', 'cantRue-vehiculo');
+                inputRuedas.setAttribute('type', 'text');
+                inputRuedas.setAttribute('required', '');
+
+                const inputPuertas = document.createElement('input');
+                inputPuertas.setAttribute('id', 'cantPue-vehiculo');
+                inputPuertas.setAttribute('type', 'text');
+                inputPuertas.setAttribute('required', '');
+
+                const formAbm = document.getElementById('abm-hidden-inputs');
+                formAbm.innerHTML = '';
+                formAbm.appendChild(labelRuedas);
+                formAbm.appendChild(inputRuedas);
+                formAbm.appendChild(labelPuertas);
+                formAbm.appendChild(inputPuertas);
+            }
+        });
+
+    </script>
+</body>
+</html>
+
